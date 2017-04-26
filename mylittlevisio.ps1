@@ -1,27 +1,42 @@
-﻿Set-ExecutionPolicy bypass
+﻿# Copyright 2017 Nicolas Luc Gérard PILLOUD
+# version 1.0
 
+# Force le type d'execution
+Set-ExecutionPolicy bypass
+
+# Adresess IP visé
 $destination = "127.0.0.1"
 
-#============== CREATION FICHIER - BASE ===============================================
-$date = Get-Date -format dd.MM.yyyy-hh.mm
 
+
+
+
+
+#============== CREATION FICHIER - BASE ===============================================
+# Prend la date du serveur local
+$date = Get-Date -format dd.MM.yyyy-hh.mm
+# Get du ComputerName vers la destination
 $infoprocesseur = Get-WmiObject -Class Win32_Processor -ComputerName $destination | Select-Object -Property [a-z]*
 $nom = $infoprocesseur.PSComputerName
 
-#local
+# Création du fichier HTML sur le serveur local
 New-Item "C:\wamp64\www\powershell\$nom" –type Directory
-New-Item "C:\wamp64\www\powershell\$nom\$date.php" -ItemType File
+New-Item "C:\wamp64\www\powershell\$nom" –type Directory
+New-Item "C:\wamp64\www\powershell\$nom\$date.html" -ItemType File
+# Chemin appliquer dans une variable
+$chemin = "C:\wamp64\www\powershell\$nom\$date.html"
+$cheminparent = "C:\wamp64\www\powershell\$nom"
 
-$chemin = "C:\wamp64\www\powershell\$nom\$date.php"
 
-#============== CREATION SCRIPT - PHP schéma disque ============================
-$scriptgraph1 = "C:\wamp64\www\powershell\scriptgraph1.php"
-$scriptengraph1 = "C:\wamp64\www\powershell\scriptendgraph1.php"
+
+
 
 
 
 #============== HTML ===========================================================
+# First balise HTML et CSS
 ADD-content -path $chemin -value '<hml><head><meta charset="utf-8" /></head><link href="http://127.0.0.1/powershell/style.css" rel="stylesheet" type="text/css" /><body>'
+# Chemin logo
 ADD-content -path $chemin -value '<img src="http://127.0.0.1/powershell/logo.jpg"><br>'
 
 
@@ -33,8 +48,41 @@ ADD-content -path $chemin -value '<img src="http://127.0.0.1/powershell/logo.jpg
 
 
 
+#============= MAIL INFO =====================================================
+# Informations address du serveur de messagerie
+$smtpServer = "smtp.example.org"
+# Address Expéditeur
+$from = "mylittlevisio <mylittlevisio@example.fr>"
+# Adresse Reception
+$to = "Helpdesk <npilloud@example.fr>"
+
+
+
+
+
+
+
+
 #============== DATE ===========================================================
-ADD-content -path $chemin -value $date
+# Get DATE a distance vers destinations
+$datedistant = Get-WmiObject -Class Win32_LocalTime -ComputerName $destination | Select-Object -Property [a-z]*
+# Split et mise en forme de la DATE
+$datedistantday = $datedistant.day -split "="
+$datedistantmonth = $datedistant.month -split "="
+$datedistantyear = $datedistant.year -split "="
+$datedistanthour = $datedistant.hour -split "="
+$datedistantminute = $datedistant.Minute -split "="
+
+# Début tableau TIME
+ADD-content -path $chemin -value "<h1>Time</h1>"
+ADD-content -path $chemin -value "<table>" #html - début t1
+#Ligne affichage HTML valeur TIME local server
+ADD-content -path $chemin -value "<tr><td><h2>Heure server</h2></td><td>$date</td></tr>"
+#Ligne affiachage HTML valeur TIME disatant
+ADD-content -path $chemin -value "<tr><td><h2>Heure Poste</h2></td><td>$datedistantday.$datedistantmonth.$datedistantyear-$datedistanthour.$datedistantminute</td></tr>"
+#fin tableau TIME
+ADD-content -path $chemin -value "</table>" #html - fin t2
+ADD-content -path $chemin -value "<br>"
 
 ADD-content -path $chemin -value "<br>"
 
@@ -48,7 +96,7 @@ ADD-content -path $chemin -value "<h1>Inforamtion</h1>"
 
 ADD-content -path $chemin -value "<table>" #html - début t1
 
-$domain = Get-WmiObject -Class Win32_ComputerSystem
+$domain = Get-WmiObject -Class Win32_ComputerSystem -ComputerName $destination
 $domainpc = $domain.Domain
 ADD-content -path $chemin -value "<tr><td><h2>Domain</h2></td><td>$domainpc</td></tr>"
 
@@ -59,7 +107,7 @@ ADD-content -path $chemin -value "<tr><td><h2>System Name</h2></td><td>$nom</td>
 
 
 #============== Manufacturer =========================================================
-$manufacturer = Get-WmiObject -Class Win32_ComputerSystem
+$manufacturer = Get-WmiObject -Class Win32_ComputerSystem -ComputerName $destination
 $Manufacturerpc = $manufacturer.Manufacturer
 
 
@@ -72,8 +120,9 @@ ADD-content -path $chemin -value "<tr><td><h2>Manufacturer</h2></td><td>$Manufac
 
 #============== USER ===========================================================
 #début tableau - t2
-Get-WmiObject -Class Win32_Desktop -ComputerName .
-ADD-content -path $chemin -value "<tr><td><h2>Last User</h2></td><td>$env:USERNAME</td></tr>" #html - début tr2 et début td2 et FIN
+$userconnecter = Get-WmiObject -Class Win32_ComputerSystem -Property UserName -ComputerName $destination
+$userconnecter = $userconnecter.username 
+ADD-content -path $chemin -value "<tr><td><h2>Last User</h2></td><td>$userconnecter</td></tr>" #html - début tr2 et début td2 et FIN
 
 
 
@@ -84,14 +133,17 @@ ADD-content -path $chemin -value "<tr><td><h2>Last User</h2></td><td>$env:USERNA
 
 
 
-#============== OS =====================================================
+#========================= OS =====================================================
 $a = get-itemproperty -path registry::"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 $aproductname = $a.ProductName 
 ADD-content -path $chemin -value "<tr><td><h2>O.S</h2></td><td>$aproductname" #la ligne se finis dans partie 32 ou 64 bits ?
 
 ADD-content -path $chemin -value " - "
 
-#============== 32 ou 64 bits ?? ===============================================
+
+
+
+#========================= 32 ou 64 bits ?? ===============================================
 if ([intptr]::size -eq 8)
 {
    ADD-content -path $chemin -value "64bits</td>" 
@@ -105,7 +157,12 @@ else
    ADD-content -path $chemin -value "ERROR</td>"
 }
 
-#============== VERSION D'OS ===================================================
+
+
+
+
+
+#========================= VERSION D'OS ===================================================
 
 $versionos = get-WmiObject Win32_operatingsystem
 $versionos = $versionos.version
@@ -123,13 +180,12 @@ ADD-content -path $chemin -value "</table>" #html - fin t1
 
 
 
-#============== DISQUE =========================================================
-ADD-content -path $chemin -value "<h1>Disque</h1>"
+#============================ DISQUE =========================================================
+ADD-content -path $chemin -value "<h1>Disque physique</h1>"
 #début tableau - t2
 ADD-content -path $chemin -value "<table>" #html - début t2
 
-$disques = get-WmiObject Win32_LogicalDisk
-$disques | Select-Object model, index, mediatype
+$disques = Get-WmiObject -Class Win32_LogicalDisk -Filter "DriveType=3" -ComputerName $destination
 $taille_totale = 0 # initialisation de la variable
     $computerdisque = 0
 # boucle pour parcourir tous les disques
@@ -152,33 +208,48 @@ foreach ( $disque in $disques ) {
     { 
     ADD-content -path $chemin -value "<td><font color='red'>$tailledisque" 
     ADD-content -path $chemin -value "</font>Go</td></tr>"
+
+
+
+
+
+
+# Envoie du MAIL d'information WARNING : espace faible
+            $subject = "[WARNING] Mylittlevisio : '$nom' "
+            $body = "<html><head></head><body><p>Low disk space for $nomdisque only $tailledisque .</p></body></html>"
+
+Send-MailMessage -smtpserver $smtpserver -from $from -to $to -subject $subject -body $body -bodyasHTML -priority High
     }
-
-    #graphique - A modifier en cas de changement de chemin
-    $nomdisquesplit = $nomdisque -split ":"
-    $basegraph1 = "C:\wamp64\www\powershell\$nom\$nomdisquesplit.php"
-    #historique schéma .txt
-    New-Item $basegraph1 -ItemType File
-    ADD-content -path $basegraph1 -value "['$date',$tailledisque],"
-
-    ADD-content -path $chemin -value "<?php include('$scriptgraph1'); ?>"
-    ADD-content -path $chemin -value "<?php include('$basegraph1'); ?>"
-    ADD-content -path $chemin -value "<?php include('$scriptengraph1'); ?>"
-
-
-
-
-
-
 }
 
 
 ADD-content -path $chemin -value "<th colspan='2'>Total disques :"
 ADD-content -path $chemin -value "$computerdisque</th>"
 
+
+
+
+
+
+# Création du fichier "numberdisk.txt" qui sauvegarde le nombre de disque ! Ne s'écrase pas !
+new-item $cheminparent -name "numberdisk.txt" -type file
+$computerdisquehistorique = Get-Content $cheminparent\numberdisk.txt
+$comparedisk = compare-object $computerdisquehistorique $computerdisque
+#compare le nombre de disque ACTUEL avec le nombre de disque HISORIQUE - Si ERREUR envoie de mail !
+if ($comparedisk)
+{
+            $subject = "[WARNING] Mylittlevisio : '$nom' "
+            $body = "<html><head></head><body><p>Un disque est manquant !</p></body></html>"
+}
+
+
 #fin tableau - t2
 ADD-content -path $chemin -value "</table>" #html - fin t2
 ADD-content -path $chemin -value "<br>"
+
+
+
+
 
 
 
