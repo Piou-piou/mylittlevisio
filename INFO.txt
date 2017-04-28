@@ -1,0 +1,13 @@
+Mylittlevisio est code Powershell permmettant la supervision de poste informatique fonctionnant sous l'OS Windows. Il va trouver de nombreuses informations de poste distant et les écris dans une page HTML généré (ajout de CSS pour un meilleur rendu).
+
+
+Defaut majeur actuel :
+- Le chemin d'installation ne peut etre modifier actuellement dans le progamme via "$ultimatepath".
+
+A faire :
+- Ajout d'une fonction permettant.
+
+Ajout :
+- Ajout interface graphique.
+- Ajout "Fast Execution" pour superviser une poste distant via IP.
+- Ajout "Reset CSS" permet de mettre à zéro le fichier CSS.
