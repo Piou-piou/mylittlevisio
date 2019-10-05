@@ -27,10 +27,6 @@ Set-ExecutionPolicy bypass
 $destination = $textBox1.Text
 
 
-
-
-
-
 #============== CREATION FICHIER - BASE ===============================================
 # Prend la date du serveur local
 $date = Get-Date -format dd.MM.yyyy-hh.mm
@@ -53,26 +49,12 @@ $pathparent = "$rootpath\$nom"
 $pathsave = "$rootpath\$nom\_save"
 
 
-
-
-
-
-
-
 #============== HTML ===========================================================
 # First balise HTML et CSS
 $pathCSS = "$rootpath\_config\style.css"
 ADD-content -path $path -value "<hml><head><meta charset='utf-8' /></head><link href='$pathCSS' rel='stylesheet' type='text/css' /><body>"
 # Chemin logo
 ADD-content -path $path -value '<img src="http://127.0.0.1/powershell/logo.jpg"><br>'
-
-
-
-
-
-
-
-
 
 
 #============= MAIL INFO =====================================================
@@ -82,12 +64,6 @@ $smtpServer = "smtp.example.org"
 $from = "mylittlevisio <mylittlevisio@example.fr>"
 # Adresse Reception
 $to = "Helpdesk <npilloud@example.fr>"
-
-
-
-
-
-
 
 
 #============== TIME ===========================================================
@@ -112,7 +88,6 @@ ADD-content -path $path -value "</table>" #html - fin t2
 ADD-content -path $path -value "<br>"
 
 
-
 #============== INFO INTERFACE ======================
 # Début tableau INTERAFCE
 ADD-content -path $path -value "<h1>Interface</h1>"
@@ -120,8 +95,6 @@ ADD-content -path $path -value "<table>" #html - début t1
 
 
 $allinterface = get-wmiobject -class "Win32_NetworkAdapterConfiguration" -computername $destination |Where{$_.IpEnabled -Match "True"} 
-
-
 
  foreach ($oneinterface in $allinterface) 
     {
